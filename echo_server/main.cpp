@@ -7,10 +7,8 @@ int main(int argc, char *argv[]) {
   }
 
   try {
-    boost::asio::io_context io_context;
     boost::asio::thread_pool thread_pool(std::thread::hardware_concurrency());
-    Server server(io_context, std::atoi(argv[1]), thread_pool);
-    io_context.run();
+    Server server(thread_pool.get_executor().context(), std::atoi(argv[1]), thread_pool);
     thread_pool.join();
   } catch (std::exception &e) {
     std::cerr << "Exception: " << e.what() << "\n";
