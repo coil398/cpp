@@ -2,9 +2,9 @@
 #define ECHO_SERVER_HPP
 
 #include <boost/asio.hpp>
+#include <boost/asio/thread_pool.hpp>
 #include <iostream>
 #include <memory>
-#include <boost/asio/thread_pool.hpp>
 
 using boost::asio::ip::tcp;
 
@@ -46,22 +46,24 @@ private:
 
 class Server {
 public:
-  Server(boost::asio::io_context &io_context, short port, boost::asio::thread_pool &thread_pool)
-      : acceptor_(io_context, tcp::endpoint(tcp::v4(), port)), thread_pool_(thread_pool) {
+  Server(boost::asio::thread_pool &thread_pool, short port)
+      : acceptor_(thread_pool.get_executor().context(),
+                  tcp::endpoint(tcp::v4(), port)),
+        thread_pool_(thread_pool) {
     do_accept();
   }
 
 private:
   void do_accept() {
-    acceptor_.async_accept(
-        [this](boost::system::error_code ec, tcp::socket socket) {
-          if (!ec) {
-            boost::asio::post(thread_pool_, [socket = std::move(socket)]() mutable {
-              std::make_shared<Session>(std::move(socket))->start();
-            });
-          }
-          do_accept();
+    acceptor_.async_accept([this](boost::system::error_code ec,
+                                  tcp::socket socket) {
+      if (!ec) {
+        boost::asio::post(thread_pool_, [socket = std::move(socket)]() mutable {
+          std::make_shared<Session>(std::move(socket))->start();
         });
+      }
+      do_accept();
+    });
   }
 
   tcp::acceptor acceptor_;
