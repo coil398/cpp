@@ -1,0 +1,11 @@
+{
+  "name": "C++ Development Container",
+  "image": "mcr.microsoft.com/devcontainers/cpp:0-ubuntu-20.04",
+  "extensions": [
+    "ms-vscode.cpptools",
+    "ms-vscode.cmake-tools"
+  ],
+  "settings": {
+    "C_Cpp.intelliSenseEngine": "Default"
+  }
+}
